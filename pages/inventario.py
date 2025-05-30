@@ -216,12 +216,6 @@ def evaluar_estado(pedido, stock):
 
 pedidos["Estado"] = pedidos.apply(lambda row: evaluar_estado(row["Pedido (T)"], row["Disponible (T)"]), axis=1)
 
-# Datos Simulados de Etapas
-etapas = pd.DataFrame({
-    "Etapa": ["En preparación", "Corriendo", "Listo para embarcar", "En camino", "Entregado"],
-    "Pedidos": [12, 8, 15, 9, 6]
-})
-
 
 
 ########### Datos Simulados de Pedidos Por Clientes ###########
@@ -236,7 +230,7 @@ productos = [
     "VIGA IPN 200", "POLIN PINT. 6X2"
 ]
 
-estados = ["Pendiente", "Facturado", "Completo"]
+estados = ["Pendiente", "Completo"]
 
 
 
@@ -249,92 +243,53 @@ col2.metric("⚠️ Productos Bajo Stock", str((pedidos["Estado"] == "🟨 Bajo 
 col3.metric("📄 Productos Mal Registrados", "0")
 
 
-c1, c2 = st.columns([2,2])
-with c1:
-    #####  Gráfica de etapas  #####
-    fig = px.bar(
-        etapas,
-    x="Etapa",
-    y="Pedidos",
-    orientation="v",
-    text="Pedidos",
-    title="<b>📌 Status de Pedidos</b>",
-    color_discrete_sequence=["#3f5364"] 
-)
 
-    fig.update_layout(
-        title_font=dict(size=26, color="#3f5364", family="Arial"),
-        xaxis=dict(
-            title=None,
-            color="#3f5364",
-            showgrid=False,
-            tickfont=dict(
-                color="#3f5364",
-                size=10,
-                family="Arial",
-                weight="bold")
-    ),
-    yaxis=dict(
-        title=None,
-    ),
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-)
-
-    fig.update_traces(
-        textposition="outside",
-        textfont=dict(color="#3f5364", size=12, family="Arial")
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-with c2:
-    ############ Tabla Semaforizada de Inventario ############
-    st.subheader("📝 Productos con Pedido vs Inventario")
-    pedidos["Seleccionado"] = False
-    gb = GridOptionsBuilder.from_dataframe(pedidos)
-    gb.configure_column(
-        "Producto",
-        header_name="Producto",
-        editable=False,
-        cellStyle=JsCode("""
-        function(params) {
-            if (params.data.Seleccionado) {
-            return {backgroundColor:'#FF6B6B', color:'white', fontWeight:'bold'};
-            }
-            return {};
-        }
-        """)
-    )
-
-    # Checkbox para marcar productos incorrectos
-    gb.configure_column(
-        "Seleccionado",
-        header_name="Marcar",
-        editable=True,
-        cellEditor="agCheckboxCellEditor",
-        cellRenderer="agCheckboxCellRenderer"
-    )
-    gb.configure_grid_options(getRowStyle=JsCode("""
+############ Tabla Semaforizada de Inventario ############
+st.subheader("📝 Productos con Pedido vs Inventario")
+pedidos["Seleccionado"] = False
+gb = GridOptionsBuilder.from_dataframe(pedidos)
+gb.configure_column(
+    "Producto",
+    header_name="Producto",
+    editable=False,
+    cellStyle=JsCode("""
     function(params) {
         if (params.data.Seleccionado) {
-        return {backgroundColor:'#FF6B6B', color:'white'};
+        return {backgroundColor:'#FF6B6B', color:'white', fontWeight:'bold'};
         }
+        return {};
     }
-    """))
+    """)
+)
 
-    gridOptions = gb.build()
-    grid_response = AgGrid(
-        pedidos,
-        gridOptions=gridOptions,
-        update_mode=GridUpdateMode.VALUE_CHANGED,
-        allow_unsafe_jscode=True,
-        height=350,
-        fit_columns_on_grid_load=True
-    )
+# Checkbox para marcar productos incorrectos
+gb.configure_column(
+    "Seleccionado",
+    header_name="Marcar",
+    editable=True,
+    cellEditor="agCheckboxCellEditor",
+    cellRenderer="agCheckboxCellRenderer"
+)
+gb.configure_grid_options(getRowStyle=JsCode("""
+function(params) {
+    if (params.data.Seleccionado) {
+    return {backgroundColor:'#FF6B6B', color:'white'};
+    }
+}
+"""))
 
-    df_actualizado = grid_response["data"]
-    seleccionados = df_actualizado[df_actualizado["Seleccionado"] == True]
+gridOptions = gb.build()
+grid_response = AgGrid(
+    pedidos,
+    gridOptions=gridOptions,
+    update_mode=GridUpdateMode.VALUE_CHANGED,
+    allow_unsafe_jscode=True,
+    height=350,
+    fit_columns_on_grid_load=True
+)
+
+df_actualizado = grid_response["data"]
+seleccionados = df_actualizado[df_actualizado["Seleccionado"] == True]
 
 
 ####### Tarjetas Expandibles de Pedidos por cliente #######
