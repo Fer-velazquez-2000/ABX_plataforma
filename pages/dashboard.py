@@ -124,7 +124,7 @@ for b in botones:
     st.sidebar.image(b["img"], use_container_width=True)
 
     if st.sidebar.button(b["label"]):
-        st.switch_page("pages/" + b["page"] + ".py")
+        st.switch_page("pages/" + b["page"].lower() + ".py")
 
 
 
