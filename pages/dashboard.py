@@ -143,8 +143,8 @@ df["TOTAL TON"] = pd.to_numeric(df["TOTAL TON"], errors="coerce")
 df = df[df["TOTAL TON"].notna()]
 
 # Cálculos de Métricas
-total_embarques = len(df)
-total_toneladas = df["TOTAL TON"].sum()
+total_embarques = len(df) / 30
+total_toneladas = df["TOTAL TON"].sum() / 30
 eficiencia_embarque = 52 # Dato Simulado de Posible Indicador
 max_toneladas = df["TOTAL TON"].max()
 
@@ -176,8 +176,8 @@ pct_bajo_stock = (tabla["Estado"] == "🟥 Sin Inventario").mean() * 100
 
 # Tarjetas de métricas
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total de Embarques", total_embarques)
-col2.metric("Total Toneladas", f"{total_toneladas:,.0f}")
+col1.metric("Total de Embarques Diarios", f"{total_embarques:,.0f}")
+col2.metric("Total Toneladas Diarias", f"{total_toneladas:,.0f}")
 col3.metric("Eficiencia de Embarque", f"{eficiencia_embarque:,.0f}%")
 col4.metric("% de Productos con Bajo Stock", f"{pct_bajo_stock:.1f}%")
 
@@ -187,7 +187,9 @@ c1, c2 = st.columns(2)
 with c1:
     ###### Gráfico de Top de Clientes ######
     df_top = df.groupby("CLIENTE")["TOTAL TON"].sum().sort_values(ascending=True).head(5).reset_index()
-    fig = px.bar(df_top, y="CLIENTE", x="TOTAL TON", title="Top Clientes por Toneladas Embarcadas",
+    df_top["TOTAL TON"] = df_top["TOTAL TON"] / 30
+    df_top["TOTAL TON"] = df_top["TOTAL TON"].round(2)
+    fig = px.bar(df_top, y="CLIENTE", x="TOTAL TON", title="Top Clientes por Promedio Diario de Toneladas Embarcadas",
                 labels={"CLIENTE": "Cliente", "TOTAL TON": "Toneladas"})
     fig.update_layout(xaxis_tickangle=0)
 
